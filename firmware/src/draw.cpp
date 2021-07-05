@@ -15,24 +15,19 @@
 static volatile uint8_t on_at[128];
 static volatile uint32_t index = 0;
 
-static volatile uint16_t jiffie_tracker = 0;
-static volatile uint16_t next_jiffie = 625;
-
 volatile uint32_t Draw::vspeed = 0;
-volatile uint8_t Draw::jiffies = 0;
 
 void Draw::init()
 {
 	DDRB |= (1 << PINB3);
 
-	/* Sets Timer2 in CTC mode mode.TOP = OCR2A, update at immediate, no pre-scaling */
 	TCCR2A = (1 << WGM21); /*page 203 and 205*/
-	TCCR2B = (1 << CS20);
+	TCCR2B = (1 << CS21);
 
 	TIMSK2 = (1 << OCIE2A); // Configure Timer2 interrupts to send LUT value
 
 	/*Note: OCR2A is set after TCCR1x initialization to avoid overwriting/reset*/
-	OCR2A = 255;
+	OCR2A = 31;
 
 	clear();
 }
@@ -126,25 +121,12 @@ ISR(TIMER2_COMPA_vect)
 	index += Draw::vspeed;
 
 	/* Check if light is on at this angle */
-	if (on_at[(i >> 3) & 127] & 1 << (i & 7) && Draw::vspeed > 2048)
+	if (on_at[(i >> 3) & 127] & 1 << (i & 7))
 	{
 		PORTB |= (1 << PINB3);
 	}
 	else
 	{
 		PORTB &= ~(1 << PINB3);
-	}
-
-	/* Jiffies */
-	jiffie_tracker++;
-	if (jiffie_tracker == next_jiffie)
-	{
-		Draw::jiffies++;
-		next_jiffie += 625;
-
-		if (Draw::jiffies == 100)
-		{
-			Draw::jiffies = 0;
-		}
 	}
 }

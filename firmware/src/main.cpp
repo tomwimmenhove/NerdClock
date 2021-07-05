@@ -20,28 +20,22 @@ int main()
 	Draw::init();
 	Draw::vspeed = 512;
 
-	uint8_t last_jiffie = Draw::jiffies;
+	uint8_t old_digits[4];
+	uint8_t digits[4];
 
 	for (uint16_t i = 0;;i++)
 	{
 		if (Draw::vspeed < 25600)
 		{
-			_delay_us(20);
+			_delay_us(25);
 
 			Draw::vspeed++;
 		}
 
-		uint8_t jiffies = Draw::jiffies;
-		if (jiffies != last_jiffie)
-		{
-			/* A second past */
-			if (jiffies == 0)
-			{
-				Draw::draw_digit(0,hours / 10, 0);
-				Draw::draw_digit(32, hours % 10, 0);
-				Draw::draw_digit(96, mins / 10, 0);
-				Draw::draw_digit(128, mins % 10, 0);
+		uint16_t mod = i % 1000;
 
+		if (mod == 0)
+		{
 				mins++;
 				if (mins == 60)
 				{
@@ -54,23 +48,34 @@ int main()
 					}
 				}
 
-				Draw::draw_digit(0,hours / 10, 1);
-				Draw::draw_digit(32, hours % 10, 1);
-				Draw::draw_digit(96, mins / 10, 1);
-				Draw::draw_digit(128, mins % 10, 1);
+				digits[0] = hours / 10;
+				digits[1] = hours % 10;
+				digits[2] = mins / 10;
+				digits[3] = mins % 10;
+
+				uint8_t angle = 0;
+				for (uint8_t j = 0; j < 4; j++)
+				{
+					uint8_t digit = digits[j];
+					Draw::draw_digit(angle, old_digits[j], 0);
+					Draw::draw_digit(angle, digit, 1);
+					old_digits[j] = digit;
+					angle += 35;
+					if (j == 1) /* Skip the colon */
+					{
+						angle += 28;
+					}
+				}
 			}
 
-			last_jiffie = jiffies;
-		}
-
 		/* Blinking colon */
-		if (jiffies < 50)
+		if (mod < 500)
 		{
-			Draw::draw_digit(64, 10, 1);
+			Draw::draw_digit(63, 10, 1);
 		}
 		else
 		{
-			Draw::draw_digit(64, 10, 0);
+			Draw::draw_digit(63, 10, 0);
 		}
 	}
 }

@@ -11,7 +11,7 @@ SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:.o=.d)
 
-CPPFLAGS = -g -DF_CPU=16000000 -Wall -Os -Werror -Wextra -mmcu=$(DEVICE) -std=c++11 -MMD -MP
+CPPFLAGS = -g -DF_CPU=16000000 -Wall -O3 -Werror -Wextra -mmcu=$(DEVICE) -std=c++11 -MMD -MP
 LDFLAGS  = -Wl,-Map,$(BUILD_DIR)/$(TARGET_NAME).map
 
 all: $(BUILD_DIR)/$(TARGET_NAME).hex

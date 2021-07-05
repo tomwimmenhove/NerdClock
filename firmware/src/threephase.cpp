@@ -22,7 +22,7 @@ void ThreePhase::init()
 
 	/* Sets Timer0 in Fast PWM mode. Clears OC0A on Compare Match, set OC0A at BOTTOM (non-inverting mode).
        Then, waveform generation is set to mode 3: Fast PWM with TOP of 0xFF*/
-	TCCR0A = (1 << COM0A1) | (1 << COM0B1) | (1 << WGM00) | (1 << WGM01); /*page 104 and page 106*/
+	TCCR0A = (1 << COM0A1) | (1 << WGM00) | (1 << WGM01); /*page 104 and page 106*/
 	TCCR0B = (1 << CS00); /*No pre-scaling (page 108)*/
 
 	/* Sets Timer1 in Fast PWM mode. Clears OC1A/B on Compare Match, set OC1A/B at BOTTOM (non-inverting mode).
