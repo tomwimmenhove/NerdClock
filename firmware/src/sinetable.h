@@ -9,9 +9,8 @@
 #define SRC_SINETABLE_H_
 
 #include <stdint.h>
-
 #include <avr/pgmspace.h>
 
-extern const uint8_t sinewaveLUT[];
+extern const uint8_t sinetable[];
 
 #endif /* SRC_SINETABLE_H_ */

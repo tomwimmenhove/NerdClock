@@ -15,6 +15,9 @@ volatile uint8_t ThreePhase::w = 128;
 
 void ThreePhase::init()
 {
+	DDRD |= (1 << PIND6);
+	DDRB |= (1 << PINB1) | (1 << PINB2);
+
 	/* Setup mostly stolen from https://github.com/hannahvsawiuk/3-Phase-PWM */
 
 	/* Sets Timer0 in Fast PWM mode. Clears OC0A on Compare Match, set OC0A at BOTTOM (non-inverting mode).
@@ -27,18 +30,12 @@ void ThreePhase::init()
 	TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM12) | (1 << WGM10) ; /*page 171 and 172*/
 	TCCR1B = (1 << CS10); /*No pre-scaling (page 173) NOTE: must change if using an external clock*/
 
-	/* Sets Timer2 in CTC mode mode.TOP = OCR2A, update at immediate, no pre-scaling */
-	TCCR2A = (1 << WGM21); /*page 203 and 205*/
-	TCCR2B = (1 << CS20);
-
-	cli(); /*disable interrupts*/
+	cli();
 
 	TIMSK0 = (1 << TOIE0);  // Enable Timer0
 	TIMSK1 = (1 << TOIE1);  // Enable Timer1
-	TIMSK2 = (1 << OCIE2A); // Configure Timer2 interrupts to send LUT value
 
-	/*Note: OCR2A is set after TCCR1x initialization to avoid overwriting/reset*/
-	OCR2A = 255;
+	sei();
 }
 
 ISR (TIMER0_OVF_vect)

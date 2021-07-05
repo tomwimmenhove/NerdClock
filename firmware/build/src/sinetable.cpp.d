@@ -1,3 +1,3 @@
-build/src/sinetable.cpp.o: src/sinetable.cpp src/SineTable.h
+build/src/sinetable.cpp.o: src/sinetable.cpp src/sinetable.h
 
-src/SineTable.h:
+src/sinetable.h:
