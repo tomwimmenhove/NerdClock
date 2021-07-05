@@ -55,7 +55,6 @@
 		<project id="clock.null.1278774668" name="clock"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="de.innot.avreclipse.toolchain.winavr.base.556046628;de.innot.avreclipse.toolchain.winavr.base.556046628.336796754;de.innot.avreclipse.tool.compiler.winavr.base.619508663;de.innot.avreclipse.compiler.winavr.input.1045786823">
@@ -64,5 +63,17 @@
 		<scannerConfigBuildInfo instanceId="de.innot.avreclipse.toolchain.winavr.base.556046628;de.innot.avreclipse.toolchain.winavr.base.556046628.336796754;de.innot.avreclipse.tool.cppcompiler.base.2136716299;de.innot.avreclipse.cppcompiler.input.1804183452">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="de.innot.avreclipse.core.AVRGCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
+		<buildTargets>
+			<target name="flash" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make</buildCommand>
+				<buildArguments/>
+				<buildTarget>flash</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>false</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+		</buildTargets>
 	</storageModule>
 </cproject>
