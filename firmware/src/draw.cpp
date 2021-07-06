@@ -130,9 +130,7 @@ ISR(TIMER2_COMPA_vect)
 	if (w > 127) w = 127;
 	if (w < -128) w = -128;
 
-	ThreePhase::u = u + 0x80;
-	ThreePhase::v = v + 0x80;
-	ThreePhase::w = w + 0x80;
+	ThreePhase::set_uvw(u + 0x80, v + 0x80, w + 0x80);
 
 	index += Draw::vspeed;
 

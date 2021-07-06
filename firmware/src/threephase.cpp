@@ -9,16 +9,12 @@
 
 #include "threephase.h"
 
-volatile uint8_t ThreePhase::u = 128;
-volatile uint8_t ThreePhase::v = 128;
-volatile uint8_t ThreePhase::w = 128;
-
 void ThreePhase::init()
 {
 	DDRD |= (1 << PIND6);
 	DDRB |= (1 << PINB1) | (1 << PINB2);
 
-	/* Setup mostly stolen from https://github.com/hannahvsawiuk/3-Phase-PWM */
+	/* Setup partly stolen from https://github.com/hannahvsawiuk/3-Phase-PWM */
 
 	cli();
 
@@ -36,17 +32,9 @@ void ThreePhase::init()
 	//TCCR1B = (1 << CS10); /*No pre-scaling (page 173) NOTE: must change if using an external clock*/
 	TCCR1B = (1 << CS11);
 
-	TIMSK0 = (1 << TOIE0);  // Enable Timer0 interrupt
-
 	// Release all timers synchronized
 	GTCCR = 0;
 
 	sei();
 }
 
-ISR (TIMER0_OVF_vect)
-{
-	OCR0A = ThreePhase::u;
-	OCR1A = ThreePhase::v;
-	OCR1B = ThreePhase::w;
-}

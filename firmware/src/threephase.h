@@ -14,9 +14,7 @@ class ThreePhase {
 public:
 	static void init();
 
-	volatile static uint8_t u;
-	volatile static uint8_t v;
-	volatile static uint8_t w;
+	static inline void set_uvw(uint8_t u, uint8_t v, uint8_t w) { OCR0A = u; OCR1A = v; OCR1B = w; }
 };
 
 #endif /* SRC_THREEPHASE_H_ */
