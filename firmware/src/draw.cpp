@@ -16,6 +16,7 @@ static volatile uint8_t on_at[128];
 static volatile uint32_t index = 0;
 
 volatile uint32_t Draw::vspeed = 0;
+volatile uint8_t Draw::amplitude = 0;
 
 void Draw::init()
 {
@@ -114,9 +115,24 @@ ISR(TIMER2_COMPA_vect)
 {
 	/* DDS */
 	uint16_t i = index >> 16;
-	ThreePhase::w = pgm_read_byte(&sinetable[i & 0xff]);
-	ThreePhase::v = pgm_read_byte(&sinetable[(i + 85) & 0xff]);
-	ThreePhase::u = pgm_read_byte(&sinetable[(i + 170) & 0xff]);
+	int16_t u = (int8_t) pgm_read_byte(&sinetable[i & 0xff]);
+	int16_t v = (int8_t) pgm_read_byte(&sinetable[(i + 85) & 0xff]);
+	//int16_t w = (int8_t) pgm_read_byte(&sinetable[(i + 170) & 0xff]);
+
+	u *= Draw::amplitude;
+	u >>= 8;
+	v *= Draw::amplitude;
+	v >>= 8;
+	//w *= amplitude;
+	//w >>= 8;
+
+	int16_t w = - (u + v);
+	if (w > 127) w = 127;
+	if (w < -128) w = -128;
+
+	ThreePhase::u = u + 0x80;
+	ThreePhase::v = v + 0x80;
+	ThreePhase::w = w + 0x80;
 
 	index += Draw::vspeed;
 

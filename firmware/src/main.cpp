@@ -18,21 +18,29 @@ int main()
 
 	ThreePhase::init();
 	Draw::init();
-	Draw::vspeed = 512;
+	//Draw::vspeed = 512;
 
 	uint8_t old_digits[4];
 	uint8_t digits[4];
 
+	Draw::vspeed = 0;
+	Draw::amplitude = 32;
+
+	//for (;;);
+
 	for (uint16_t i = 0;;i++)
 	{
-		if (Draw::vspeed < 25600)
+		if (Draw::vspeed < 65536)
 		{
-			_delay_us(25);
+			_delay_us(10);
 
 			Draw::vspeed++;
+
+			int16_t amplitude = 128 +  Draw::vspeed / 512;//256;
+			Draw::amplitude = amplitude <= 255 ? amplitude : 255;
 		}
 
-		uint16_t mod = i % 1000;
+		uint16_t mod = i % 5000;
 
 		if (mod == 0)
 		{
@@ -69,7 +77,7 @@ int main()
 			}
 
 		/* Blinking colon */
-		if (mod < 500)
+		if (mod < 2500)
 		{
 			Draw::draw_digit(63, 10, 1);
 		}

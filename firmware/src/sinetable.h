@@ -11,6 +11,6 @@
 #include <stdint.h>
 #include <avr/pgmspace.h>
 
-extern const uint8_t sinetable[];
+extern const int8_t sinetable[];
 
 #endif /* SRC_SINETABLE_H_ */
