@@ -12,11 +12,14 @@
 #include "threephase.h"
 #include "sinetable.h"
 
-static volatile uint8_t on_at[128];
+static volatile uint8_t buffer[128];
 static volatile uint32_t index = 0;
 
-volatile uint32_t Draw::vspeed = 0;
+volatile uint8_t Draw::ramp_time = 0;
+volatile uint32_t Draw::speed_target = 0;
+volatile uint32_t Draw::speed_actual = 0;
 volatile uint8_t Draw::amplitude = 0;
+volatile uint64_t Draw::jiffies;
 
 void Draw::init()
 {
@@ -35,9 +38,9 @@ void Draw::init()
 
 void Draw::clear()
 {
-	for (uint8_t i = 0; i < sizeof(on_at); i++)
+	for (uint8_t i = 0; i < sizeof(buffer); i++)
 	{
-		on_at[i] = 0;
+		buffer[i] = 0;
 	}
 }
 
@@ -63,11 +66,11 @@ void Draw::set_angle(int16_t angle, uint8_t enable)
 {
 	if (enable)
 	{
-		on_at[angle / 8] |= 1 << (angle & 7);
+		buffer[angle / 8] |= 1 << (angle & 7);
 	}
 	else
 	{
-		on_at[angle / 8] &= ~(1 << (angle & 7));
+		buffer[angle / 8] &= ~(1 << (angle & 7));
 	}
 }
 
@@ -113,6 +116,9 @@ void Draw::draw_digit(double angle, int digit, uint8_t enable)
 
 ISR(TIMER2_COMPA_vect)
 {
+	static int16_t jiffie_timer;
+	static int8_t ramp_timer;
+
 	/* DDS */
 	uint16_t i = index >> 16;
 	int16_t u = (int8_t) pgm_read_byte(&sinetable[i & 0xff]);
@@ -132,15 +138,32 @@ ISR(TIMER2_COMPA_vect)
 
 	ThreePhase::set_uvw(u + 0x80, v + 0x80, w + 0x80);
 
-	index += Draw::vspeed;
+	index += Draw::speed_actual;
 
 	/* Check if light is on at this angle */
-	if (on_at[(i >> 3) & 127] & 1 << (i & 7))
+	if (buffer[(i >> 3) & 127] & 1 << (i & 7))
 	{
 		PORTB |= (1 << PINB3);
 	}
 	else
 	{
 		PORTB &= ~(1 << PINB3);
+	}
+
+	/* Ramp up to target speed */
+	if (++ramp_timer == Draw::ramp_time)
+	{
+		if (Draw::speed_actual < Draw::speed_target)
+		{
+			Draw::speed_actual++;
+		}
+		ramp_timer = 0;
+	}
+
+	if (++jiffie_timer == 625)
+	{
+		jiffie_timer = 0;
+
+		Draw::jiffies++;
 	}
 }

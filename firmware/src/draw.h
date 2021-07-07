@@ -19,8 +19,12 @@ public:
 
 	// RPS = F_CPU / OCR2A / sizeof(sinewaveLUT) / 65536 / N_POLES * vspeed
 	// RPS = vspeed / 1073.742
-	static volatile uint32_t vspeed;
+	static volatile uint32_t speed_target;
+	static volatile uint32_t speed_actual;
 	static volatile uint8_t amplitude;
+	static volatile uint64_t jiffies;
+	static volatile uint8_t ramp_time;
+
 
 private:
 	static uint16_t segment_angle(int segment);
