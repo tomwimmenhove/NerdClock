@@ -12,7 +12,10 @@
 #include "threephase.h"
 #include "sinetable.h"
 
-static volatile uint8_t buffer[128];
+static volatile uint8_t buffer0[128];
+static volatile uint8_t buffer1[128];
+static volatile uint8_t* read_buffer = buffer0;
+static volatile uint8_t* write_buffer = buffer1;
 static volatile uint32_t index = 0;
 
 volatile uint8_t Draw::ramp_time = 0;
@@ -20,6 +23,7 @@ volatile uint32_t Draw::speed_target = 0;
 volatile uint32_t Draw::speed_actual = 0;
 volatile uint8_t Draw::amplitude = 0;
 volatile uint64_t Draw::jiffies;
+volatile uint16_t Draw::current_angle = 0;
 
 void Draw::init()
 {
@@ -38,15 +42,22 @@ void Draw::init()
 
 void Draw::clear()
 {
-	for (uint8_t i = 0; i < sizeof(buffer); i++)
+	for (uint8_t i = 0; i < sizeof(buffer0); i++)
 	{
-		buffer[i] = 0;
+		write_buffer[i] = 0;
 	}
 }
 
-uint16_t Draw::segment_angle(int segment)
+void Draw::flip()
 {
-	const uint16_t x = 11;
+	volatile uint8_t* tmp = read_buffer;
+	read_buffer = write_buffer;
+	write_buffer = tmp;
+}
+
+int16_t Draw::segment_angle(int segment)
+{
+	const int16_t x = 11;
 
 	switch(segment)
 	{
@@ -64,24 +75,27 @@ uint16_t Draw::segment_angle(int segment)
 
 void Draw::set_angle(int16_t angle, uint8_t enable)
 {
+	while (angle > 1024) angle -= 1024;
+	while (angle <    0) angle += 1024;
+
 	if (enable)
 	{
-		buffer[angle / 8] |= 1 << (angle & 7);
+		write_buffer[angle / 8] |= 1 << (angle & 7);
 	}
 	else
 	{
-		buffer[angle / 8] &= ~(1 << (angle & 7));
+		write_buffer[angle / 8] &= ~(1 << (angle & 7));
 	}
 }
 
-void Draw::draw_segment(uint16_t angle, int segment, uint8_t enable)
+void Draw::draw_segment(int16_t angle, int segment, uint8_t enable)
 {
 	angle += segment_angle(segment);
 
 	set_angle(angle, enable);
 }
 
-void Draw::draw_segments(uint16_t angle, uint8_t segment_mask, uint8_t enable)
+void Draw::draw_segments(int16_t angle, uint8_t segment_mask, uint8_t enable)
 {
 	for (int i = 0; i < 8; i++)
 	{
@@ -94,7 +108,7 @@ void Draw::draw_segments(uint16_t angle, uint8_t segment_mask, uint8_t enable)
 	}
 }
 
-void Draw::draw_digit(double angle, int digit, uint8_t enable)
+void Draw::draw_digit(int16_t angle, int digit, uint8_t enable)
 {
 	static uint8_t digits[] =
 	{
@@ -120,10 +134,10 @@ ISR(TIMER2_COMPA_vect)
 	static int8_t ramp_timer;
 
 	/* DDS */
-	uint16_t i = index >> 16;
-	int16_t u = (int8_t) pgm_read_byte(&sinetable[i & 0xff]);
-	int16_t v = (int8_t) pgm_read_byte(&sinetable[(i + 85) & 0xff]);
-	//int16_t w = (int8_t) pgm_read_byte(&sinetable[(i + 170) & 0xff]);
+	Draw::current_angle = index >> 16;
+	int16_t u = (int8_t) pgm_read_byte(&sinetable[Draw::current_angle & 0xff]);
+	int16_t v = (int8_t) pgm_read_byte(&sinetable[(Draw::current_angle + 85) & 0xff]);
+	//int16_t w = (int8_t) pgm_read_byte(&sinetable[(Draw::current_angle + 170) & 0xff]);
 
 	u *= Draw::amplitude;
 	u >>= 8;
@@ -141,7 +155,7 @@ ISR(TIMER2_COMPA_vect)
 	index += Draw::speed_actual;
 
 	/* Check if light is on at this angle */
-	if (buffer[(i >> 3) & 127] & 1 << (i & 7))
+	if (read_buffer[(Draw::current_angle >> 3) & 127] & 1 << (Draw::current_angle & 7))
 	{
 		PORTB |= (1 << PINB3);
 	}
