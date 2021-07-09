@@ -13,6 +13,8 @@
 class Draw {
 public:
 	static void init();
+	static void start_detector();
+
 	static void clear();
 	static void flip();
 
@@ -26,6 +28,8 @@ public:
 	static volatile uint64_t jiffies;
 	static volatile uint8_t ramp_time;
 	static volatile uint16_t current_angle;
+	static volatile uint16_t dot_angle;
+	static volatile uint8_t moving;
 
 
 private:

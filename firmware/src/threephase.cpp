@@ -8,6 +8,7 @@
 #include <avr/interrupt.h>
 
 #include "threephase.h"
+#include "sinetable.h"
 
 void ThreePhase::init()
 {
@@ -34,3 +35,22 @@ void ThreePhase::init()
 	GTCCR = 0;
 }
 
+void ThreePhase::set_angle(uint16_t angle, uint8_t amplitude)
+{
+	int16_t u = (int8_t) pgm_read_byte(&sinetable[angle & 0xff]);
+	int16_t v = (int8_t) pgm_read_byte(&sinetable[(angle + 85) & 0xff]);
+	//int16_t w = (int8_t) pgm_read_byte(&sinetable[(angle + 170) & 0xff]);
+
+	u *= amplitude;
+	u >>= 8;
+	v *= amplitude;
+	v >>= 8;
+	//w *= amplitude;
+	//w >>= 8;
+
+	int16_t w = - (u + v);
+	if (w > 127) w = 127;
+	if (w < -128) w = -128;
+
+	set_uvw(u + 0x80, v + 0x80, w + 0x80);
+}

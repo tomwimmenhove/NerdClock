@@ -13,18 +13,11 @@
 #include "draw.h"
 #include "threephase.h"
 
-volatile uint8_t beep = 0;
-volatile uint8_t moving = 0;
-
-volatile uint16_t dot_angle = 0;
-
 int main()
 {
-	DDRD |= (1 << PIND6);
-	DDRB |= (1 << PINB1) | (1 << PINB2);
+	ThreePhase::init();
+    Draw::start_detector();
 
-    EICRA |= (1 << ISC11);  // INT1 on falling edge of PD3
-    EIMSK |= (1 << INT1);   // Turns on INT1
 	sei();
 
     int16_t angle_correction = 0;
@@ -39,23 +32,26 @@ int main()
 	PORTB &= ~((1 << PINB1) | (1 << PINB2));
 	for (;;)
 	{
-		moving = 0;
+		Draw::moving = 0;
 		for (uint16_t i = 0; i < 5000; i++)
 		{
 			_delay_us(100);
 		}
-		if (!moving)
+		if (!Draw::moving)
 		{
 			break;
 		}
 	}
 
-	ThreePhase::init();
+	PORTD &= ~(1 << PIND6);
+	PORTB &= ~((1 << PINB1) | (1 << PINB2));
+
+	//ThreePhase::init();
 	Draw::init();
 
 	/* Force to closest pole */
 	Draw::amplitude = 255;
-	for (uint16_t i = 0; i < 100; i++)
+	for (uint16_t i = 0; i < 200; i++)
 	{
 		_delay_us(100);
 	}
@@ -76,16 +72,11 @@ int main()
 			//int16_t amplitude = 64 +  Draw::vspeed / 341;
 			Draw::amplitude = amplitude <= 255 ? amplitude : 255;
 		}
-
-		/* Keep track of where the platters are until we're up to speed */
-		if (Draw::speed_actual < Draw::speed_target)
+		else
 		{
-			angle_correction = dot_angle - 256;
+			/* Keep track of where the platters are until we're up to speed */
+			angle_correction = Draw::dot_angle - 512;
 		}
-//		else
-//		{
-//			EIMSK &= ~(1 << INT1);
-//		}
 
 		uint64_t half_secs = jiffies / 50;
 		uint64_t total_secs = jiffies / 100;
@@ -137,11 +128,5 @@ int main()
 
 		last_halfs = halfs;
 	}
-}
-
-ISR (INT1_vect)
-{
-	dot_angle = Draw::current_angle & 1023;
-	moving = 1;
 }
 
