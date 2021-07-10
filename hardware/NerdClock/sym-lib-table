@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name DRV8813)(type Legacy)(uri ${KIPRJMOD}/DRV8813.lib)(options "")(descr "")(disabled))
+  (lib (name DRV8313)(type Legacy)(uri ${KIPRJMOD}/DRV8313.lib)(options "")(descr ""))
+  (lib (name OPB706A)(type Legacy)(uri ${KIPRJMOD}/OPB706A.lib)(options "")(descr ""))
+)
