@@ -813,7 +813,7 @@ Text GLabel 2750 4500 2    50   Input ~ 0
 SW1
 Text GLabel 2750 3500 2    50   Input ~ 0
 SW2
-Text GLabel 2750 4800 2    50   Input ~ 0
+Text GLabel 2750 3400 2    50   Input ~ 0
 SW3
 $Comp
 L power:GND #PWR032
@@ -1130,7 +1130,7 @@ F 3 "" H 10700 2200 50  0001 C CNN
 $EndComp
 Text GLabel 10400 2000 0    50   Input ~ 0
 DC_BRAKE
-Text GLabel 2750 3400 2    50   Input ~ 0
+Text GLabel 2750 4800 2    50   Input ~ 0
 DC_BRAKE
 $Comp
 L Connector_Generic:Conn_01x04 J4
@@ -1984,10 +1984,10 @@ Connection ~ 5250 7400
 Wire Wire Line
 	5250 7400 5000 7400
 $Comp
-L power:VCC #PWR?
+L power:VCC #PWR0105
 U 1 1 61EFF6FD
 P 7750 4800
-F 0 "#PWR?" H 7750 4650 50  0001 C CNN
+F 0 "#PWR0105" H 7750 4650 50  0001 C CNN
 F 1 "VCC" H 7765 4973 50  0000 C CNN
 F 2 "" H 7750 4800 50  0001 C CNN
 F 3 "" H 7750 4800 50  0001 C CNN
