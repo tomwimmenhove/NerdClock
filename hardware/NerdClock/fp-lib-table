@@ -2,4 +2,5 @@
   (lib (name OPB706A)(type KiCad)(uri ${KIPRJMOD}/OPB706A.pretty)(options "")(descr ""))
   (lib (name WhiteLed1W)(type KiCad)(uri ${KIPRJMOD}/WhiteLed1W.pretty)(options "")(descr ""))
   (lib (name MotorConn)(type KiCad)(uri ${KIPRJMOD}/MotorConn.pretty)(options "")(descr ""))
+  (lib (name logo)(type KiCad)(uri ${KIPRJMOD}/logo)(options "")(descr ""))
 )

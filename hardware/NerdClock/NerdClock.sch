@@ -813,7 +813,7 @@ Text GLabel 2750 4500 2    50   Input ~ 0
 SW1
 Text GLabel 2750 3500 2    50   Input ~ 0
 SW2
-Text GLabel 2750 3400 2    50   Input ~ 0
+Text GLabel 2750 3600 2    50   Input ~ 0
 SW3
 $Comp
 L power:GND #PWR032
