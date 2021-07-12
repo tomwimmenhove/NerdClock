@@ -2001,4 +2001,15 @@ Wire Wire Line
 	7750 5400 6850 5400
 Connection ~ 7750 5400
 Connection ~ 6850 5400
+$Comp
+L Graphic:Logo_Open_Hardware_Large #LOGO?
+U 1 1 6210449D
+P 10650 4100
+F 0 "#LOGO?" H 10650 4600 50  0001 C CNN
+F 1 "Logo_Open_Hardware_Large" H 10650 3700 50  0001 C CNN
+F 2 "" H 10650 4100 50  0001 C CNN
+F 3 "~" H 10650 4100 50  0001 C CNN
+	1    10650 4100
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
