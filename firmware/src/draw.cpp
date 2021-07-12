@@ -12,10 +12,7 @@
 #include "threephase.h"
 #include "sinetable.h"
 
-static volatile uint8_t buffer0[128];
-static volatile uint8_t buffer1[128];
-static volatile uint8_t* read_buffer = buffer0;
-static volatile uint8_t* write_buffer = buffer1;
+static uint8_t buffer[128];
 static volatile uint32_t index = 0;
 
 volatile uint8_t Draw::ramp_time = 0;
@@ -26,18 +23,17 @@ volatile uint64_t Draw::jiffies;
 volatile uint16_t Draw::current_angle = 0;
 volatile uint16_t Draw::dot_angle = 0;
 volatile uint8_t Draw::moving = 0;
+volatile uint16_t Draw::offset_angle;
 
 void Draw::init()
 {
 	DDRB |= (1 << PINB3);
 
-	TCCR2A = (1 << WGM21); /*page 203 and 205*/
-	TCCR2B = (1 << CS21);
+	TCCR2A = 0;
+	//TCCR2A = (1 << COM2A1) | (1 << WGM21) | (1 << WGM20);
+	TCCR2B = (1 << CS20);
 
 	TIMSK2 = (1 << OCIE2A); // Configure Timer2 interrupts to send LUT value
-
-	/*Note: OCR2A is set after TCCR1x initialization to avoid overwriting/reset*/
-	OCR2A = 31;
 
 	clear();
 }
@@ -50,22 +46,15 @@ void Draw::start_detector()
 
 void Draw::clear()
 {
-	for (uint8_t i = 0; i < sizeof(buffer0); i++)
+	for (uint8_t i = 0; i < sizeof(buffer); i++)
 	{
-		write_buffer[i] = 0;
+		buffer[i] = 0;
 	}
 }
 
-void Draw::flip()
+uint16_t Draw::segment_angle(int segment)
 {
-	volatile uint8_t* tmp = read_buffer;
-	read_buffer = write_buffer;
-	write_buffer = tmp;
-}
-
-int16_t Draw::segment_angle(int segment)
-{
-	const int16_t x = 11;
+	const uint16_t x = 11;
 
 	switch(segment)
 	{
@@ -81,42 +70,36 @@ int16_t Draw::segment_angle(int segment)
 	return 0;
 }
 
-void Draw::set_angle(int16_t angle, uint8_t enable)
+void Draw::set_angle(uint16_t angle, uint8_t enable)
 {
-	while (angle > 1024) angle -= 1024;
-	while (angle <    0) angle += 1024;
-
 	if (enable)
 	{
-		write_buffer[angle / 8] |= 1 << (angle & 7);
+		buffer[(angle >> 3) & 127] |= 1 << (angle & 7);
 	}
 	else
 	{
-		write_buffer[angle / 8] &= ~(1 << (angle & 7));
+		buffer[(angle >> 3) & 127] &= ~(1 << (angle & 7));
 	}
 }
 
-void Draw::draw_segment(int16_t angle, int segment, uint8_t enable)
+void Draw::draw_segment(uint16_t angle, int segment, uint8_t enable)
 {
 	angle += segment_angle(segment);
 
 	set_angle(angle, enable);
 }
 
-void Draw::draw_segments(int16_t angle, uint8_t segment_mask, uint8_t enable)
+void Draw::draw_segments(uint16_t angle, uint8_t segment_mask)
 {
-	for (int i = 0; i < 8; i++)
+	for (uint8_t i = 0; i < 8; i++)
 	{
-		if (segment_mask & 1)
-		{
-			draw_segment(angle, i, enable);
-		}
+		draw_segment(angle, i, segment_mask & 1);
 
 		segment_mask >>= 1;
 	}
 }
 
-void Draw::draw_digit(int16_t angle, int digit, uint8_t enable)
+void Draw::draw_digit(int16_t angle, int digit)
 {
 	static uint8_t digits[] =
 	{
@@ -131,14 +114,15 @@ void Draw::draw_digit(int16_t angle, int digit, uint8_t enable)
 			0b01111111,
 			0b01101111,
 			0b10000000,
+			0b00000000,
 	};
 
-	draw_segments(angle, digits[digit], enable);
+	draw_segments(angle, digits[digit]);
 }
 
 ISR(TIMER2_COMPA_vect)
 {
-	static int16_t jiffie_timer;
+	//static int16_t jiffie_timer;
 	static int8_t ramp_timer;
 
 	/* DDS: Set the UVW angle of the motor */
@@ -158,22 +142,19 @@ ISR(TIMER2_COMPA_vect)
 	}
 
 	/* Check if light is on at this angle */
-	uint16_t x = Draw::current_angle;// - Draw::dot_angle;
-	if (read_buffer[(x >> 3) & 127] & 1 << (x & 7))
+	uint16_t x = Draw::current_angle + Draw::offset_angle;
+	if (buffer[(x >> 3) & 127] & 1 << (x & 7))
 	{
 		PORTB |= (1 << PINB3);
+		//OCR2A = Draw::brightness;
 	}
 	else
 	{
 		PORTB &= ~(1 << PINB3);
+		//OCR2A = 0;
 	}
 
-	if (++jiffie_timer == 625)
-	{
-		jiffie_timer = 0;
-
-		Draw::jiffies++;
-	}
+	Draw::jiffies++;
 }
 
 ISR (INT1_vect)

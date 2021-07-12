@@ -3,9 +3,11 @@ BUILD_DIR = build
 SRC_DIRS = src
 CPP = avr-g++
 DEVICE = atmega328p
+#DEVICE = atmega168p
 THE_DUDE = avrdude
 #THE_DUDEARGS = -q -q -p$(DEVICE) -cusbasp -Pusb
 THE_DUDEARGS = -q -q -patmega328p -carduino -P/dev/ttyUSB0 -b57600 -D
+#THE_DUDEARGS = -q -q -F -patmega328p -carduino -P/dev/ttyUSB0 -b57600 -D
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)

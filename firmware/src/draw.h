@@ -16,9 +16,8 @@ public:
 	static void start_detector();
 
 	static void clear();
-	static void flip();
 
-	static void draw_digit(int16_t angle, int digit, uint8_t enable);
+	static void draw_digit(int16_t angle, int digit);
 
 	// RPS = F_CPU / OCR2A / sizeof(sinewaveLUT) / 65536 / N_POLES * vspeed
 	// RPS = vspeed / 1073.742
@@ -28,15 +27,15 @@ public:
 	static volatile uint64_t jiffies;
 	static volatile uint8_t ramp_time;
 	static volatile uint16_t current_angle;
+	static volatile uint16_t offset_angle;
 	static volatile uint16_t dot_angle;
 	static volatile uint8_t moving;
 
-
 private:
-	static int16_t segment_angle(int segment);
-	static void set_angle(int16_t angle, uint8_t enable);
-	static void draw_segment(int16_t angle, int segment, uint8_t enable);
-	static void draw_segments(int16_t angle, uint8_t segment_mask, uint8_t enable);
+	static uint16_t segment_angle(int segment);
+	static void set_angle(uint16_t angle, uint8_t enable);
+	static void draw_segment(uint16_t angle, int segment, uint8_t enable);
+	static void draw_segments(uint16_t angle, uint8_t segment_mask);
 };
 
 #endif /* SRC_DRAW_H_ */
