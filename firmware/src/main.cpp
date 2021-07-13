@@ -13,18 +13,28 @@
 #include "draw.h"
 #include "threephase.h"
 #include "ds1338.h"
+#include "serial.h"
 
 int main()
 {
-	ThreePhase::init();
-    Draw::start_detector();
+	serial::init();
+	serial::puts("Init three-phase: ");
 
+	ThreePhase::init();
+	serial::puts("OK\n");
+
+	serial::puts("Starting detector: ");
+    Draw::start_detector();
+    serial::puts("OK\n");
+
+    serial::puts("Enabling interrupts\n");
 	sei();
 
     uint8_t last_halfs = 255;
 
 	Draw::speed_target = 0;
 
+	serial::puts("Braking: ");
 	/* BRAKE */
 	PORTD &= ~(1 << PIND6);
 	PORTB &= ~((1 << PINB1) | (1 << PINB2));
@@ -40,18 +50,24 @@ int main()
 			break;
 		}
 	}
+	serial::puts("OK\n");
 
+	serial::puts("Enabling motor output pins\n");
 	PORTD &= ~(1 << PIND6);
 	PORTB &= ~((1 << PINB1) | (1 << PINB2));
 
+	serial::puts("Init draw: ");
 	Draw::init();
+	serial::puts("OK\n");
 
 	/* Force to closest pole */
+	serial::puts("Forcing to closest pole: ");
 	Draw::amplitude = 255;
 	for (uint16_t i = 0; i < 200; i++)
 	{
 		_delay_us(100);
 	}
+	serial::puts("OK\n");
 
 	Draw::amplitude = 128;
 	Draw::speed_target = 65536;
@@ -59,6 +75,7 @@ int main()
 
 	//DS1338::init();
 
+	serial::puts("Entering main-loop\n");
 	for (;;)
 	{
 		uint64_t jiffies = Draw::jiffies / 625;
