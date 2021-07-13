@@ -12,6 +12,7 @@
 #include "sinetable.h"  // LUT file
 #include "draw.h"
 #include "threephase.h"
+#include "ds1338.h"
 
 int main()
 {
@@ -55,6 +56,8 @@ int main()
 	Draw::amplitude = 128;
 	Draw::speed_target = 65536;
 	Draw::ramp_time = 20;
+
+	//DS1338::init();
 
 	for (;;)
 	{

@@ -52,24 +52,6 @@ void Draw::clear()
 	}
 }
 
-uint16_t Draw::segment_angle(int segment)
-{
-	const uint16_t x = 11;
-
-	switch(segment)
-	{
-	case 0: return 512;
-	case 1: return 853 + x;
-	case 2: return 683 + x;
-	case 3: return 171;
-	case 4: return 683 - x;
-	case 5: return 853 - x;
-	case 6: return 341;
-	}
-
-	return 0;
-}
-
 void Draw::set_angle(uint16_t angle, uint8_t enable)
 {
 	if (enable)
@@ -84,7 +66,9 @@ void Draw::set_angle(uint16_t angle, uint8_t enable)
 
 void Draw::draw_segment(uint16_t angle, int segment, uint8_t enable)
 {
-	angle += segment_angle(segment);
+	const uint16_t x = 11;
+	static int16_t angles[] = { 512, 853 + x,  683 + x, 171, 683 - x, 853 - x, 341, 0 };
+	angle += angles[segment];
 
 	set_angle(angle, enable);
 }

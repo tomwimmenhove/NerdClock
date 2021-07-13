@@ -32,7 +32,6 @@ public:
 	static volatile uint8_t moving;
 
 private:
-	static uint16_t segment_angle(int segment);
 	static void set_angle(uint16_t angle, uint8_t enable);
 	static void draw_segment(uint16_t angle, int segment, uint8_t enable);
 	static void draw_segments(uint16_t angle, uint8_t segment_mask);
