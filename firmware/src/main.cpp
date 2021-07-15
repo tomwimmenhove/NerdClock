@@ -18,6 +18,57 @@
 int main()
 {
 	serial::init();
+
+	serial::puts("Start-up\n");
+
+	serial::puts("Initializing RTC: ");
+	DS1338::init();
+	serial::puts("OK\n");
+
+//	static time time;
+//	time.set_year(2021);
+//	time.set_date(14);
+//	time.set_month(07);
+//	time.set_hour(21, true);
+//	time.set_min(28);
+//	time.set_sec(0);
+//
+//	DS1338::set(time);
+//
+//	sei();
+//	for (;;)
+//	{
+//		if (!DS1338::tick)
+//		{
+//			continue;
+//		}
+//
+//		DS1338::tick = false;
+//
+//		struct time time;
+//		DS1338::get(time);
+//
+//		serial::puts("Time: ");
+//		serial::puti(time.get_date());
+//		serial::puts("-");
+//		serial::puti(time.get_month());
+//		serial::puts("-");
+//		serial::puti(time.get_year());
+//		serial::puts(" -- ");
+//		serial::puti(time.get_hour());
+//		serial::puts(":");
+//		serial::puti(time.get_min());
+//		serial::puts(":");
+//		serial::puti(time.get_sec());
+//		serial::puts("\n");
+//
+//		for (uint16_t i = 0; i < 2000; i++)
+//		{
+//			_delay_us(100);
+//		}
+//	}
+
+	serial::init();
 	serial::puts("Init three-phase: ");
 
 	ThreePhase::init();
@@ -30,7 +81,7 @@ int main()
     serial::puts("Enabling interrupts\n");
 	sei();
 
-    uint8_t last_halfs = 255;
+    //uint8_t last_halfs = 255;
 
 	Draw::speed_target = 0;
 
@@ -73,12 +124,10 @@ int main()
 	Draw::speed_target = 65536;
 	Draw::ramp_time = 20;
 
-	//DS1338::init();
-
 	serial::puts("Entering main-loop\n");
 	for (;;)
 	{
-		uint64_t jiffies = Draw::jiffies / 625;
+		//uint64_t jiffies = Draw::jiffies / 625;
 
 		/* Don't ramp down the amplitude before we have picked up a little speed.
 		 * Apparently, the first bit is haaard; push at full force. PUSH MOTHERFUCKER! PUSH! */
@@ -94,27 +143,35 @@ int main()
 			Draw::offset_angle = -Draw::dot_angle - 400;
 		}
 
-		uint64_t half_secs = jiffies / 50;
-		uint8_t halfs = half_secs % 200;
+//		uint64_t half_secs = jiffies / 50;
+//		uint8_t halfs = half_secs % 200;
 
-		if (halfs != last_halfs)
+		if (!DS1338::tick)
 		{
-			uint64_t total_secs = jiffies / 100;
-			uint64_t total_mins = total_secs / 60;
-			//uint64_t total_hours = (total_mins / 60);
+			continue;
+		}
 
-			//uint8_t hund = jiffies % 100;
-			uint8_t secs = total_secs % 60;
-			uint8_t mins = total_mins % 60;
-			//uint8_t hours = total_hours % 24;
+		struct time time;
+		DS1338::get(time);
 
-			Draw::draw_digit(0, mins / 10);
-			Draw::draw_digit(35, mins % 10);
-			Draw::draw_digit(91, secs / 10);
-			Draw::draw_digit(126, secs % 10);
+		//if (halfs != last_halfs)
+		{
+//			uint64_t total_secs = jiffies / 100;
+//			uint64_t total_mins = total_secs / 60;
+//			//uint64_t total_hours = (total_mins / 60);
+//
+//			//uint8_t hund = jiffies % 100;
+//			uint8_t secs = total_secs % 60;
+//			uint8_t mins = total_mins % 60;
+//			//uint8_t hours = total_hours % 24;
+
+			Draw::draw_digit(0, time.min >> 4);
+			Draw::draw_digit(35, time.min & 0xf);
+			Draw::draw_digit(91, time.sec >> 4);
+			Draw::draw_digit(126, time.sec & 0xf);
 
 			/* Blinking colon */
-			if ((halfs & 1) == 0)
+			if ((time.sec & 1) == 0)
 			{
 				Draw::draw_digit(63, 10);
 			}
@@ -124,7 +181,7 @@ int main()
 			}
 		}
 
-		last_halfs = halfs;
+		//last_halfs = halfs;
 	}
 }
 

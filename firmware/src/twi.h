@@ -12,13 +12,14 @@
 
 class Twi {
 public:
-	static void init(void);
-	static void start(void);
+	static void init();
+	static void start(uint8_t address);
 	static void stop(void);
 	static void write(uint8_t u8data);
 	static uint8_t read_ack(void);
 	static uint8_t read_nack(void);
-	static uint8_t get_status(void);
+	static void write8(uint8_t address, uint8_t reg, uint8_t data);
+	static uint8_t read8(uint8_t address, uint8_t reg);
 };
 
 #endif /* TWI_H_ */
