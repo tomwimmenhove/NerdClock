@@ -1857,13 +1857,13 @@ $EndComp
 $Comp
 L Connector_Generic:Conn_01x02 J12
 U 1 1 619D28C8
-P 4550 3950
-F 0 "J12" H 4550 3750 50  0000 C CNN
-F 1 "Conn_01x02" H 4468 3716 50  0001 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 4550 3950 50  0001 C CNN
-F 3 "~" H 4550 3950 50  0001 C CNN
-	1    4550 3950
-	1    0    0    1   
+P 4550 3850
+F 0 "J12" H 4550 3650 50  0000 C CNN
+F 1 "Conn_01x02" H 4468 3616 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 4550 3850 50  0001 C CNN
+F 3 "~" H 4550 3850 50  0001 C CNN
+	1    4550 3850
+	1    0    0    -1  
 $EndComp
 $Comp
 L power:GND #PWR0103
