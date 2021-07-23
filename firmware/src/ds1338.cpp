@@ -15,10 +15,17 @@ volatile bool DS1338::tick = false;
 
 void DS1338::init()
 {
+	// D2 is an open-drain output
+	PORTD |= (1 << PIND2);
+
 	EICRA |= (1 << ISC01);  // INT0 on falling edge of PD2
     EIMSK |= (1 << INT0);   // Turns on INT0
 
 	Twi::init();
+
+	Twi::start(0);
+	Twi::write(0);
+    Twi::stop();
 
 	// Enable 1PPS square wave
 	Twi::write8(address_write, 7, 0x10);
