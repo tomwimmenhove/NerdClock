@@ -23,8 +23,6 @@ public:
 	// RPS = vspeed / 1073.742
 	static volatile uint32_t speed_target;
 	static volatile uint32_t speed_actual;
-	static volatile uint8_t amplitude;
-	static volatile uint64_t jiffies;
 	static volatile uint8_t ramp_time;
 	static volatile uint16_t current_angle;
 	static volatile uint16_t offset_angle;

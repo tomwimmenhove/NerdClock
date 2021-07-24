@@ -18,8 +18,6 @@ static volatile uint32_t index = 0;
 volatile uint8_t Draw::ramp_time = 0;
 volatile uint32_t Draw::speed_target = 0;
 volatile uint32_t Draw::speed_actual = 0;
-volatile uint8_t Draw::amplitude = 0;
-volatile uint64_t Draw::jiffies;
 volatile uint16_t Draw::current_angle = 0;
 volatile uint16_t Draw::dot_angle = 0;
 volatile uint8_t Draw::moving = 0;
@@ -111,7 +109,7 @@ ISR(TIMER2_COMPA_vect)
 
 	/* DDS: Set the UVW angle of the motor */
 	Draw::current_angle = index >> 16;
-	ThreePhase::set_angle(Draw::current_angle, Draw::amplitude);
+	ThreePhase::set_angle(Draw::current_angle);
 
 	index += Draw::speed_actual;
 
@@ -137,8 +135,6 @@ ISR(TIMER2_COMPA_vect)
 		PORTB &= ~(1 << PINB3);
 		//OCR2A = 0;
 	}
-
-	Draw::jiffies++;
 }
 
 ISR (INT1_vect)

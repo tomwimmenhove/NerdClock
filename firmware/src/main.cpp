@@ -86,16 +86,16 @@ int main()
 	Draw::init();
 	serial::puts("OK\n");
 
+	ThreePhase::set_amplitude(128);
+
 	/* Force to closest pole */
 	serial::puts("Forcing to closest pole: ");
-	Draw::amplitude = 128;
 	for (uint16_t i = 0; i < 20; i++)
 	{
 		_delay_us(100);
 	}
 	serial::puts("OK\n");
 
-	Draw::amplitude = 128;
 	Draw::speed_target = 65536;
 	Draw::ramp_time = 4;
 
@@ -105,21 +105,26 @@ int main()
 
 	//bool colon_on = false;
 	serial::puts("Entering main-loop\n");
+	bool done = false;
 	for (;;)
 	{
 		/* Don't ramp down the amplitude before we have picked up a little speed.
 		 * Apparently, the first bit is haaard; push at full force. PUSH MOTHERFUCKER! PUSH! */
 		if (Draw::speed_actual > 8192)
 		{
-			if (Draw::speed_actual == Draw::speed_target)
+			if (Draw::speed_actual == Draw::speed_target && !done)
 			{
-				Draw::amplitude = 128;
+				ThreePhase::set_amplitude(128);
+				done = true;
 			}
 			else
 			{
 				uint16_t amplitude = 128 +  Draw::speed_target / 512;
-				//int16_t amplitude = 64 +  Draw::speed_target / 341 / 2;
-				Draw::amplitude = amplitude <= 255 ? amplitude : 255;
+				if (amplitude > 255)
+				{
+					amplitude = 255;
+				}
+				ThreePhase::set_amplitude(amplitude);
 			}
 		}
 		else
@@ -128,22 +133,14 @@ int main()
 			Draw::offset_angle = -Draw::dot_angle - 512 + 63;
 		}
 
-//		if (colon_on && Draw::jiffies > 31250)
-//		{
-//			Draw::draw_digit(63, 11);
-//			colon_on = false;
-//		}
-
-//		if (!DS1338::tick)
-//		{
-//			continue;
-//		}
-//		DS1338::tick = false;
+		if (!DS1338::tick)
+		{
+			continue;
+		}
+		DS1338::tick = false;
 
 		serial::puts("tick\n");
 
-		//Draw::jiffies = 0;
-		//colon_on = true;
 		struct time time;
 		DS1338::get(time);
 

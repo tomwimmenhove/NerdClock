@@ -15,7 +15,8 @@ public:
 	static void init();
 
 	static inline void set_uvw(uint8_t u, uint8_t v, uint8_t w) { OCR0A = u; OCR1A = v; OCR1B = w; }
-	static void set_angle(uint16_t angle, uint8_t amplitude);
+	static void set_angle(uint16_t angle);
+	static void set_amplitude(uint8_t amplitude);
 };
 
 #endif /* SRC_THREEPHASE_H_ */

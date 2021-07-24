@@ -10,8 +10,14 @@
 #include "threephase.h"
 #include "sinetable.h"
 
+static uint8_t sine_table_scaled[256];
+
 void ThreePhase::init()
 {
+	for (int i =0; i < 256; i++)
+	{
+		sine_table_scaled[i] = (int8_t) pgm_read_byte(&sinetable[i]);
+	}
 	DDRD |= (1 << PIND6);
 	DDRB |= (1 << PINB1) | (1 << PINB2);
 
@@ -35,18 +41,21 @@ void ThreePhase::init()
 	GTCCR = 0;
 }
 
-void ThreePhase::set_angle(uint16_t angle, uint8_t amplitude)
+void ThreePhase::set_amplitude(uint8_t amplitude)
 {
-	int16_t u = (int8_t) pgm_read_byte(&sinetable[angle & 0xff]);
-	int16_t v = (int8_t) pgm_read_byte(&sinetable[(angle + 85) & 0xff]);
-	//int16_t w = (int8_t) pgm_read_byte(&sinetable[(angle + 170) & 0xff]);
+	for (int i =0; i < 256; i++)
+	{
+		 int16_t x = (int8_t) pgm_read_byte(&sinetable[i]);
+		 x *= amplitude;
+		 x >>= 8;
+		 sine_table_scaled[i] = x;
+	}
+}
 
-	u *= amplitude;
-	u >>= 8;
-	v *= amplitude;
-	v >>= 8;
-	//w *= amplitude;
-	//w >>= 8;
+void ThreePhase::set_angle(uint16_t angle)
+{
+	int16_t u = (int8_t) sine_table_scaled[angle & 0xff];
+	int16_t v = (int8_t) sine_table_scaled[(angle + 85) & 0xff];
 
 	int16_t w = - (u + v);
 	if (w > 127) w = 127;
