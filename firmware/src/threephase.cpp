@@ -9,14 +9,16 @@
 
 #include "threephase.h"
 #include "sinetable.h"
+#include "serial.h"
 
 static uint8_t sine_table_scaled[256];
+static uint8_t amplitude;
 
 void ThreePhase::init()
 {
 	for (int i =0; i < 256; i++)
 	{
-		sine_table_scaled[i] = (int8_t) pgm_read_byte(&sinetable[i]);
+		sine_table_scaled[i] = 0;
 	}
 	DDRD |= (1 << PIND6);
 	DDRB |= (1 << PINB1) | (1 << PINB2);
@@ -43,6 +45,9 @@ void ThreePhase::init()
 
 void ThreePhase::set_amplitude(uint8_t amplitude)
 {
+	serial::puts("Setting amplitude to ");
+	serial::puti(amplitude);
+	serial::putc('\n');
 	for (int i =0; i < 256; i++)
 	{
 		 int16_t x = (int8_t) pgm_read_byte(&sinetable[i]);
@@ -50,6 +55,13 @@ void ThreePhase::set_amplitude(uint8_t amplitude)
 		 x >>= 8;
 		 sine_table_scaled[i] = x;
 	}
+
+	::amplitude = amplitude;
+}
+
+uint8_t ThreePhase::get_amplitude()
+{
+	return ::amplitude;
 }
 
 void ThreePhase::set_angle(uint16_t angle)

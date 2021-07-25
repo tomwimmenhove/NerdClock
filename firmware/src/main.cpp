@@ -8,6 +8,7 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
+#include <avr/eeprom.h>
 
 #include "sinetable.h"  // LUT file
 #include "draw.h"
@@ -86,51 +87,115 @@ int main()
 	Draw::init();
 	serial::puts("OK\n");
 
-	ThreePhase::set_amplitude(128);
+	ThreePhase::set_amplitude(255);
 
 	/* Force to closest pole */
 	serial::puts("Forcing to closest pole: ");
-	for (uint16_t i = 0; i < 20; i++)
+	for (uint16_t i = 0; i < 1000; i++)
 	{
 		_delay_us(100);
 	}
 	serial::puts("OK\n");
 
 	Draw::speed_target = 65536;
-	Draw::ramp_time = 4;
+	Draw::ramp_time = 6;
 
 	serial::puts("Initializing RTC: ");
 	DS1338::init();
 	serial::puts("OK\n");
+
+	// Switches
+	PORTC |= ((1 << PINC2) | (1 << PINC3));
+	PORTD |= (1 << PIND4);
+
+	int8_t button_state = 0;
+	uint16_t correction = eeprom_read_word((uint16_t*) 0);
+	int8_t wait_save_correction = 0;
+
+	//ThreePhase::set_amplitude(255);
+
+	uint8_t wait_stable = 0;
+	bool ramp_down = false;
 
 	//bool colon_on = false;
 	serial::puts("Entering main-loop\n");
 	bool done = false;
 	for (;;)
 	{
+		if (done)
+		{
+			if (!(PIND & (1 << PIND4)))
+			{
+				correction++;
+				Draw::offset_angle++;
+				serial::puts("SW1\n");
+				wait_save_correction = 3;
+
+				serial::puts("Inc correction: ");
+				serial::puti(correction);
+				serial::putc('\n');
+			}
+
+			if (!(PINC & (1 << PINC2)))
+			{
+				correction--;
+				Draw::offset_angle--;
+				serial::puts("SW2\n");
+				wait_save_correction = 3;
+
+				serial::puts("Dec correction: ");
+				serial::puti(correction);
+				serial::putc('\n');
+			}
+
+			if ((!(PIND & (1 << PIND4)) && (button_state & (1 << 4))))
+			{
+				serial::puts("SW1\n");
+			}
+
+			if ((!(PINC & (1 << PINC2)) && (button_state & (1 << 2))))
+			{
+				serial::puts("SW2\n");
+			}
+
+			if ((!(PINC & (1 << PINC3)) && (button_state & (1 << 3))))
+			{
+				serial::puts("SW3\n");
+			}
+		}
+
+		button_state = (PINC & ((1 << PINC2) | (1 << PINC3))) | (PIND & (1 << PIND4));
+
 		/* Don't ramp down the amplitude before we have picked up a little speed.
 		 * Apparently, the first bit is haaard; push at full force. PUSH MOTHERFUCKER! PUSH! */
-		if (Draw::speed_actual > 8192)
+		if (!done)
 		{
-			if (Draw::speed_actual == Draw::speed_target && !done)
+			if (Draw::speed_actual == Draw::speed_target)
 			{
-				ThreePhase::set_amplitude(128);
+				serial::puts("Reached target speed\n");
 				done = true;
+				wait_stable = 2;
+				ramp_down = true;
 			}
 			else
 			{
-				uint16_t amplitude = 128 +  Draw::speed_target / 512;
-				if (amplitude > 255)
-				{
-					amplitude = 255;
-				}
-				ThreePhase::set_amplitude(amplitude);
+				/* Keep track of where the platters are until we're up to speed */
+				Draw::offset_angle = -Draw::dot_angle - 512 + correction;
 			}
 		}
-		else
+
+		if (ramp_down && wait_stable == 0)
 		{
-			/* Keep track of where the platters are until we're up to speed */
-			Draw::offset_angle = -Draw::dot_angle - 512 + 63;
+			uint8_t amplitude = ThreePhase::get_amplitude();
+
+			if (amplitude > 160)
+			{
+				ThreePhase::set_amplitude(amplitude - 1);
+			}
+			else
+			{
+				ramp_down = false;
+			}
 		}
 
 		if (!DS1338::tick)
@@ -138,6 +203,21 @@ int main()
 			continue;
 		}
 		DS1338::tick = false;
+
+		if (wait_save_correction)
+		{
+			wait_save_correction--;
+			if (wait_save_correction == 0)
+			{
+				serial::puts("Saving correction to EEPROM\n");
+				eeprom_write_word((uint16_t*) 0, correction);
+			}
+		}
+
+		if (wait_stable)
+		{
+			wait_stable--;
+		}
 
 		serial::puts("tick\n");
 
