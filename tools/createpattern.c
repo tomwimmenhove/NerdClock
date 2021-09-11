@@ -6,64 +6,6 @@
 #include <SDL2/SDL.h>
 #include "SDL2/SDL2_gfxPrimitives.h"
 
-
-double segment_angle(int segment)
-{
-	const double x = 4;
-
-	switch(segment)
-	{
-		case 0: return 180.0;
-		case 1: return 300.0 + x;
-		case 2: return 240.0 + x;
-		case 3: return 60.0;
-		case 4: return 240.0 - x;
-		case 5: return 300.0 -x;
-		case 6: return 120.0;
-		case 7: return 0.0;
-	}
-}
-
-void draw_segment(SDL_Renderer* renderer, SDL_Texture* texture, double angle, int segment)
-{
-	angle += segment_angle(segment);
-
-	SDL_RenderCopyEx( renderer, texture, NULL, NULL, angle, NULL, SDL_FLIP_NONE);
-}
-
-void draw_segments(SDL_Renderer* renderer, SDL_Texture* texture, double angle, uint8_t segment_mask)
-{
-	for (int i = 0; i < 8; i++)
-	{
-		if (segment_mask & 1)
-		{
-			draw_segment(renderer, texture, angle, i);
-		}
-
-		segment_mask >>= 1;
-	}
-}
-
-void draw_digit(SDL_Renderer* renderer, SDL_Texture* texture, double angle, int digit)
-{
-	static uint8_t digits[] =
-	{
-		0b00111111,
-		0b00000110,
-		0b01011011,
-		0b01001111,
-		0b01100110,
-		0b01101101,
-		0b01111101,
-		0b00000111,
-		0b01111111,
-		0b01101111,
-		0b10000000,
-	};
-
-	draw_segments(renderer, texture, angle, digits[digit]);
-}
-
 void rotate(int* x, int* y, double a)
 {
 	double x2 = cos(a) * *x - sin(a) * *y;
@@ -120,23 +62,140 @@ void vert_segment(int top, int straight, int tip, double a,
 			&x[5], &y[5], -a/2.0);
 }
 
-void hor_segment(int top, double straight_a, double tip_a, int height,
+void hor_segment(int center_y, double straight_a, double tip_a, int height,
 	       int midx, int midy, int16_t* x, int16_t* y)
 {
 	//void mk_point(int x, int y, int midx, int midy, int16_t* o_x, int16_t* o_y, double a)
-	mk_point(0, top,
+	mk_point(0, center_y + height / 2,
 			midx, midy, &x[0], &y[0], straight_a / 2.0);
-	mk_point(0, top - height / 2,
+	mk_point(0, center_y,
 			midx, midy, &x[1], &y[1], straight_a / 2.0 + tip_a);
-	mk_point(0, top - height,
+	mk_point(0, center_y - height / 2,
 			midx, midy, &x[2], &y[2], straight_a / 2.0);
-	mk_point(0, top - height,
+	mk_point(0, center_y - height / 2,
 			midx, midy, &x[3], &y[3], -straight_a / 2.0);
-	mk_point(0, top - height / 2,
+	mk_point(0, center_y,
 			midx, midy, &x[4], &y[4], -straight_a / 2.0 - tip_a);
-	mk_point(0, top,
+	mk_point(0, center_y + height / 2,
 			midx, midy, &x[5], &y[5], -straight_a / 2.0);
 }
+
+void draw_eight(SDL_Renderer* renderer, int midx, int midy, int r, double a)
+{
+	int top_space = 20;
+	int vert_digit_straight = 50;
+	int vert_digit_tip = 3;
+	int vert_digit_space = 3;
+	double vert_digit_width_deg = 1;
+	double hor_digit_width = deg(5);
+	double hor_digit_tip_width = deg(.5);
+
+	int16_t digit_xpoints[6];
+	int16_t digit_ypoints[6];
+	int vert_digit_bottom = -r + top_space + vert_digit_straight + 2 * vert_digit_tip;
+
+	vert_segment(vert_digit_bottom, vert_digit_straight, vert_digit_tip, deg(vert_digit_width_deg),
+			midx, midy, digit_xpoints, digit_ypoints);
+	rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, a + deg(60));
+	filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
+
+	vert_segment(vert_digit_bottom + vert_digit_straight + 2 * vert_digit_tip + vert_digit_space,
+			vert_digit_straight, vert_digit_tip, deg(vert_digit_width_deg),
+			midx, midy, digit_xpoints, digit_ypoints);
+	rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, a + deg(120));
+	filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
+
+
+	int center_y = -r + top_space - vert_digit_space / 2;
+	int hor_digit_height = (int) round(vert_digit_width_deg / 360.0 * 2 * M_PI * (-center_y));
+	hor_segment(center_y, hor_digit_width, hor_digit_tip_width, hor_digit_height,
+			midx, midy, digit_xpoints, digit_ypoints);
+	rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, a + deg(180));
+	filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
+
+	center_y += vert_digit_straight + 2 * vert_digit_tip + vert_digit_space;
+	hor_digit_height = (int) round(vert_digit_width_deg / 360.0 * 2 * M_PI * (-center_y));
+	hor_segment(center_y, hor_digit_width, hor_digit_tip_width, hor_digit_height,
+			midx, midy, digit_xpoints, digit_ypoints);
+	rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, a + deg(240));
+	filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
+
+	center_y += vert_digit_straight + 2 * vert_digit_tip + vert_digit_space;
+	hor_digit_height = (int) round(vert_digit_width_deg / 360.0 * 2 * M_PI * (-center_y));
+	hor_segment(center_y, hor_digit_width, hor_digit_tip_width, hor_digit_height,
+			midx, midy, digit_xpoints, digit_ypoints);
+	rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, a + deg(300));
+	filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);
+
+	int x = 0;
+	int y = - r + top_space + vert_digit_space + (vert_digit_straight + vert_digit_tip * 2) / 2;
+	rotate(&x, &y, a);
+	filledCircleColor(renderer, midx + x, midy + y, 15, 0xffffffff);
+
+	x = 0;
+	y = - r + top_space + vert_digit_space + (vert_digit_straight + vert_digit_tip * 2) / 2
+		+ vert_digit_straight + vert_digit_tip * 2 + vert_digit_space;
+	rotate(&x, &y, a);
+	filledCircleColor(renderer, midx + x, midy + y, 15, 0xffffffff);
+}
+
+double segment_angle(int segment)
+{
+	const double x = 3.5;
+
+	switch(segment)
+	{
+		case 0: return 180.0;
+		case 1: return 300.0 + x;
+		case 2: return 240.0 + x;
+		case 3: return 60.0;
+		case 4: return 240.0 - x;
+		case 5: return 300.0 -x;
+		case 6: return 120.0;
+		case 7: return 0.0;
+	}
+}
+
+void draw_segment(SDL_Renderer* renderer, int midx, int midy, int r, double angle, int segment)
+{
+	angle += deg(segment_angle(segment));
+
+	draw_eight(renderer, midx, midy, r, angle);
+}
+
+void draw_segments(SDL_Renderer* renderer, int midx, int midy, int r, double angle, uint8_t segment_mask)
+{
+	for (int i = 0; i < 8; i++)
+	{
+		if (segment_mask & 1)
+		{
+			draw_segment(renderer, midx, midy, r, angle, i);
+		}
+
+		segment_mask >>= 1;
+	}
+}
+
+void draw_digit(SDL_Renderer* renderer, int midx, int midy, int r, double angle, int digit)
+{
+	static uint8_t digits[] =
+	{
+		0b00111111,
+		0b00000110,
+		0b01011011,
+		0b01001111,
+		0b01100110,
+		0b01101101,
+		0b01111101,
+		0b00000111,
+		0b01111111,
+		0b01101111,
+		0b10000000,
+	};
+
+	draw_segments(renderer, midx, midy, r, angle, digits[digit]);
+}
+
 
 int main(int argc, char ** argv)
 {
@@ -174,51 +233,21 @@ int main(int argc, char ** argv)
 		//thickLineColor(renderer, 0, 1000, 1000, 0, 20, 0xFF00FFFF) ;
 
 		circleColor (renderer, midx, midy, r, 0xffffffff);
+
+		//draw_eight(renderer, midx, midy, r, deg(0));
 		
-		int x, y;
-		int16_t digit_xpoints[6];
-		int16_t digit_ypoints[6];
+		draw_digit(renderer, midx, midy, r, deg(-22.1), 1);
+		draw_digit(renderer, midx, midy, r, deg(-9.8), 2);
+		draw_digit(renderer, midx, midy, r, 0, 10);
+		draw_digit(renderer, midx, midy, r, deg(9.8), 3);
+		draw_digit(renderer, midx, midy, r, deg(22.1), 4);
 
-		int digit_top = -r + 10 + 120;
-		int digit_straight = 100;
-		int digit_tip = 10;
-		double digit_width_deg = 2;
-
-		vert_segment(digit_top, digit_straight, digit_tip, deg(digit_width_deg),
-				               midx, midy, digit_xpoints, digit_ypoints);
-		rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, deg(7));
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
-		vert_segment(digit_top + 130, digit_straight, digit_tip, deg(digit_width_deg),
-				               midx, midy, digit_xpoints, digit_ypoints);
-		rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, deg(7));
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
-
-		vert_segment(digit_top, digit_straight, digit_tip, deg(digit_width_deg),
-				               midx, midy, digit_xpoints, digit_ypoints);
-		rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, deg(-7));
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
-		vert_segment(digit_top + 130, digit_straight, digit_tip, deg(digit_width_deg),
-				               midx, midy, digit_xpoints, digit_ypoints);
-		rotate_poly(digit_xpoints, digit_ypoints, 6, midx, midy, deg(-7));
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
-
-
-		hor_segment(-r + 20, deg(10), deg(1), 20,
-				midx, midy, digit_xpoints, digit_ypoints);
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
-		hor_segment(-r + 145, deg(10), deg(1), 20,
-				midx, midy, digit_xpoints, digit_ypoints);
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
-		hor_segment(-r + 270, deg(10), deg(1), 20,
-				midx, midy, digit_xpoints, digit_ypoints);
-		filledPolygonColor(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);	
-
+		/*
+		draw_eight(renderer, midx, midy, r, deg(-15));
+		draw_eight(renderer, midx, midy, r, deg(-5));
+		draw_eight(renderer, midx, midy, r, deg(5));
+		draw_eight(renderer, midx, midy, r, deg(15));
+		*/
 
 		SDL_RenderPresent(renderer);
 		SDL_Delay(10);
