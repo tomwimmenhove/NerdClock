@@ -152,7 +152,7 @@ void draw_pattern(SDL_Renderer* renderer, double a)
 	rotate_poly(digit_xpoints, digit_ypoints, 6, 0.5, 0.5, a + deg(300));
 	draw_polygon(renderer, digit_xpoints, digit_ypoints, 6, 0xffffffff);
 
-	double cr = .01506591337099811676;
+	double cr = .01;
 	double x = 0;
 	double y = - .5 + top_space + vert_digit_space + (vert_digit_straight + vert_digit_tip * 2) / 2;
 	rotate(&x, &y, a);
@@ -225,8 +225,8 @@ void draw_digit(SDL_Renderer* renderer, double angle, int digit)
 
 int main(int argc, char ** argv)
 {
-	//int r = 531;
-	int r = 800;
+	int r = 531;
+	//int r = 2000;
 	int width = r * 2;
 	int height = width;
 
@@ -255,7 +255,7 @@ int main(int argc, char ** argv)
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);//0xFF, 0xFF);
 		SDL_RenderClear(renderer);
 
-		//circleColor (renderer, width / 2, height / 2, r, 0xffffffff);
+		circleColor (renderer, width / 2, height / 2, r, 0xffffffff);
 
 		if (0)
 		{
